@@ -5,7 +5,7 @@ import Icon from '@fastgpt/web/components/common/Icon';
 import { useTranslation } from 'next-i18next';
 import TeamSelector from '@/pageComponents/account/TeamSelector';
 import { useUserStore } from '@/web/support/user/useUserStore';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useContextSelector } from 'use-context-selector';
 import { useRouter } from 'next/router';
 import FillRowTabs from '@fastgpt/web/components/common/Tabs/FillRowTabs';
@@ -15,6 +15,7 @@ import { TeamContext, TeamModalContextProvider } from '@/pageComponents/account/
 import dynamic from 'next/dynamic';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
 import { useToast } from '@fastgpt/web/hooks/useToast';
+import AddTeamModal from '@/pageComponents/account/team/AddTeamModal';
 
 const MemberTable = dynamic(() => import('@/pageComponents/account/team/MemberTable'));
 const PermissionManage = dynamic(
@@ -37,6 +38,7 @@ export enum TeamTabEnum {
 
 const Team = () => {
   const router = useRouter();
+  const [addTeamModalOpen, setAddTeamModalOpen] = useState(false);
 
   const invitelinkid = useMemo(() => {
     const _id = router.query.invitelinkid;
@@ -65,6 +67,10 @@ const Team = () => {
   const { toast } = useToast();
 
   const { setEditTeamData, teamSize } = useContextSelector(TeamContext, (v) => v);
+
+  const handleAddTeam = () => {
+    setAddTeamModalOpen(true);
+  };
 
   const Tabs = useMemo(
     () => (
@@ -125,7 +131,16 @@ const Team = () => {
               <TeamSelector height={'28px'} />
             </Flex>
             {userInfo?.team?.role === TeamMemberRoleEnum.owner && (
-              <Flex align={'center'} justify={'center'} ml={2} p={'0.44rem'}>
+              <Flex align={'center'} justify={'center'} ml={2} p={'0.44rem'} gap={2}>
+                <MyIcon
+                  name="common/addLight"
+                  w="18px"
+                  cursor="pointer"
+                  _hover={{
+                    color: 'green.500'
+                  }}
+                  onClick={handleAddTeam}
+                />
                 <MyIcon
                   name="edit"
                   w="18px"
@@ -178,6 +193,14 @@ const Team = () => {
         </Box>
       </Flex>
       {invitelinkid && <HandleInviteModal invitelinkid={invitelinkid} />}
+      <AddTeamModal
+        isOpen={addTeamModalOpen}
+        onClose={() => setAddTeamModalOpen(false)}
+        onSuccess={() => {
+          // 刷新页面或重新获取团队列表
+          router.reload();
+        }}
+      />
     </AccountContainer>
   );
 };

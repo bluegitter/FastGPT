@@ -19,7 +19,7 @@ const TeamSelector = ({
 }) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { userInfo } = useUserStore();
+  const { userInfo, setUserInfo } = useUserStore();
   const { setLoading } = useSystemStore();
 
   const { data: myTeams = [] } = useRequest2(() => getTeamList(TeamMemberStatusEnum.active), {
@@ -34,7 +34,7 @@ const TeamSelector = ({
     },
     {
       onFinally: () => {
-        router.reload();
+        // router.reload();
         setLoading(false);
       },
       errorToast: t('common:user.team.Switch Team Failed')
@@ -71,7 +71,33 @@ const TeamSelector = ({
     if (value === 'manage') {
       router.push('/account/team');
     } else {
-      onSwitchTeam(value);
+      try {
+        onSwitchTeam(value);
+
+        const newTeam = myTeams.find((t) => String(t.teamId) === value);
+        if (newTeam && userInfo) {
+          // 仅更新 userInfo.team，不破坏其他信息
+          setUserInfo({
+            ...userInfo,
+            team: {
+              ...userInfo.team,
+              teamId: newTeam.teamId,
+              teamName: newTeam.teamName,
+              avatar: newTeam.avatar
+              // 保留原有字段（如 memberName, tmbId 等）
+            },
+            permission: userInfo.team?.permission // 外层同步指向 team 的权限
+          });
+        }
+
+        console.log('切换团队成功：', newTeam);
+        // 如果你不想刷新页面，可以去掉这行：
+        // router.reload();
+
+        if (onChange) onChange();
+      } catch (e) {
+        // toast 已由 useRequest2 自动处理
+      }
     }
   };
 

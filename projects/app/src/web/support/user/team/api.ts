@@ -112,3 +112,36 @@ export const getTeamInvoiceHeader = () =>
 
 export const updateTeamInvoiceHeader = (data: TeamInvoiceHeaderType) =>
   POST(`/proApi/support/user/team/invoiceAccount/update`, data);
+
+/* 添加这些新的API调用 */
+// export const getTeamMembersList = (params: {
+//   page?: number;
+//   pageSize?: number;
+//   status?: string;
+//   searchKey?: string;
+// }) => GET('/proApi/support/user/team/members', params);
+
+export const updateTeamMember = (id: string, data: any) =>
+  PUT(`/proApi/support/user/team/member/update`, data);
+
+export const deleteTeamMember = (id: string) =>
+  DELETE(`/proApi/support/user/team/member/delete`, { tmbId: id });
+
+export const addTeamMember = (data: {
+  username: string;
+  password: string;
+  teamId?: string;
+  role?: string;
+}) => POST('/proApi/support/user/team/member/add', data);
+
+// 新增：使用本地API
+export const getTeamMembersLocal = (
+  props: PaginationProps<{
+    status?: 'active' | 'inactive';
+    withOrgs?: boolean;
+    withPermission?: boolean;
+    searchKey?: string;
+    orgId?: string;
+    groupId?: string;
+  }>
+) => GET<PaginationResponse<TeamMemberItemType>>(`/proApi/support/team/members`, props);
