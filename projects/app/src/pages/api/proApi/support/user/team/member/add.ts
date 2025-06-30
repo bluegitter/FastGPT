@@ -11,12 +11,6 @@ import { hashStr } from '@fastgpt/global/common/string/tools';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    console.log('收到添加团队成员请求:', {
-      method: req.method,
-      body: req.body,
-      headers: req.headers
-    });
-
     // 权限验证
     const { tmbId, teamId } = await authCert({ req, authToken: true });
     console.log('权限验证通过:', { tmbId, teamId });
@@ -54,7 +48,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // 使用请求中的 teamId 或当前用户的 teamId
       const targetTeamId = requestTeamId || teamId;
-      console.log('目标团队ID:', targetTeamId);
 
       // 查找用户
       const existUser = await MongoUser.findOne({ username: username.trim() });

@@ -289,6 +289,11 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                         <Avatar src={member.avatar} w={['18px', '22px']} borderRadius={'50%'} />
                         <Box className={'textEllipsis'}>
                           {member.memberName}
+                          {member.role === TeamMemberRoleEnum.owner && (
+                            <Tag ml="2" colorSchema="blue" bg={'blue.50'} color={'blue.600'}>
+                              {t('account_team:permission_manage')}
+                            </Tag>
+                          )}
                           {member.status !== 'active' && (
                             <Tag ml="2" colorSchema="gray" bg={'myGray.100'} color={'myGray.700'}>
                               {t('account_team:leave')}

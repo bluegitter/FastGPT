@@ -8,6 +8,7 @@ import {
   TeamMemberRoleEnum,
   TeamMemberStatusEnum
 } from '@fastgpt/global/support/user/team/constant';
+import { Types } from 'mongoose';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -24,8 +25,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         withPermission = false
       } = req.body;
 
-      // 构建查询条件 - 查询所有团队成员，不限制当前团队
-      const match: any = {};
+      // 构建查询条件 - 只查询当前团队的成员
+      const match: any = {
+        $or: [{ teamId: new Types.ObjectId(teamId) }]
+      };
 
       if (status) {
         match.status = status;

@@ -3,7 +3,9 @@ import { jsonRes } from '@fastgpt/service/common/response';
 import { authCert } from '@fastgpt/service/support/permission/auth/common';
 import { MongoTeamMember } from '@fastgpt/service/support/user/team/teamMemberSchema';
 import { MongoUser } from '@fastgpt/service/support/user/schema';
+import { MongoTeam } from '@fastgpt/service/support/user/team/teamSchema';
 import { hashStr } from '@fastgpt/global/common/string/tools';
+import { TeamMemberRoleEnum } from '@fastgpt/global/support/user/team/constant';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -11,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await authCert({ req, authToken: true });
 
     if (req.method === 'PUT') {
-      const { tmbId, username, password, teamId } = req.body;
+      const { tmbId, username, password, teamId, isAdmin } = req.body;
 
       if (!tmbId) {
         return jsonRes(res, {
@@ -36,6 +38,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           code: 404,
           error: 'User not found'
         });
+      }
+
+      // 如果设置为管理员，则转让团队所有者，并将该成员role设为owner
+      if (isAdmin) {
+        await MongoTeam.findByIdAndUpdate(memberToUpdate.teamId, {
+          ownerId: memberToUpdate.userId
+        });
+        await MongoTeamMember.findByIdAndUpdate(tmbId, { role: TeamMemberRoleEnum.owner });
       }
 
       // 更新用户信息

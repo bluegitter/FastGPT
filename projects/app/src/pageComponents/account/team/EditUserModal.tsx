@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Input, ModalBody, ModalFooter, Flex, FormLabel } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Input,
+  ModalBody,
+  ModalFooter,
+  Flex,
+  FormLabel,
+  Checkbox
+} from '@chakra-ui/react';
 import MyModal from '@fastgpt/web/components/common/MyModal';
 import MySelect from '@fastgpt/web/components/common/MySelect';
 import { useToast } from '@fastgpt/web/hooks/useToast';
 import { getTeamList, updateTeamMember } from '@/web/support/user/team/api';
 import { useTranslation } from 'next-i18next';
 import type { TeamTmbItemType } from '@fastgpt/global/support/user/team/type.d';
+import { TeamMemberRoleEnum } from '@fastgpt/global/support/user/team/constant';
 
 // 用户信息类型
 interface UserInfo {
@@ -15,6 +25,7 @@ interface UserInfo {
   teamName?: string;
   memberName: string;
   contact?: string;
+  role: string;
 }
 
 interface EditUserModalProps {
@@ -33,6 +44,7 @@ const EditUserModal = ({ isOpen, onClose, onSuccess = () => {}, userInfo }: Edit
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // 获取用户可用的团队列表
   const fetchTeams = async () => {
@@ -53,6 +65,7 @@ const EditUserModal = ({ isOpen, onClose, onSuccess = () => {}, userInfo }: Edit
       setUsername(userInfo.memberName || '');
       setPassword(''); // 密码不显示原值
       setSelectedTeamId(''); // 先清空，等待团队列表加载后设置
+      setIsAdmin(userInfo.role === TeamMemberRoleEnum.owner); // 根据角色初始化
       fetchTeams();
     }
   }, [isOpen, userInfo]);
@@ -101,7 +114,8 @@ const EditUserModal = ({ isOpen, onClose, onSuccess = () => {}, userInfo }: Edit
       const updateData: any = {
         tmbId: userInfo?.tmbId,
         username: username.trim(),
-        teamId: selectedTeamId
+        teamId: selectedTeamId,
+        isAdmin
       };
 
       // 如果输入了密码，则包含密码
@@ -115,6 +129,7 @@ const EditUserModal = ({ isOpen, onClose, onSuccess = () => {}, userInfo }: Edit
       setUsername('');
       setPassword('');
       setSelectedTeamId('');
+      setIsAdmin(false);
       onClose();
       onSuccess();
     } catch (e: any) {
@@ -173,6 +188,14 @@ const EditUserModal = ({ isOpen, onClose, onSuccess = () => {}, userInfo }: Edit
                 isLoading={isLoadingTeams}
               />
             </Box>
+          </Flex>
+          <Flex align="center">
+            <FormLabel minW="70px" m={0}>
+              设置为团队管理员
+            </FormLabel>
+            <Checkbox isChecked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)}>
+              设为管理员
+            </Checkbox>
           </Flex>
         </Flex>
       </ModalBody>

@@ -201,15 +201,13 @@ const MyInfo = ({ onOpenContact }: { onOpenContact: () => void }) => {
           <Box {...labelStyles}>{t('account_info:user_account')}&nbsp;</Box>
           <Box flex={1}>{userInfo?.username}</Box>
         </Flex>
-        {feConfigs?.isPlus && (
-          <Flex mt={4} alignItems={'center'}>
-            <Box {...labelStyles}>{t('account_info:password')}&nbsp;</Box>
-            <Box flex={1}>*****</Box>
-            <Button size={'sm'} variant={'whitePrimary'} onClick={onOpenUpdatePsw}>
-              {t('account_info:change')}
-            </Button>
-          </Flex>
-        )}
+        <Flex mt={4} alignItems={'center'}>
+          <Box {...labelStyles}>{t('account_info:password')}&nbsp;</Box>
+          <Box flex={1}>*****</Box>
+          <Button size={'sm'} variant={'whitePrimary'} onClick={onOpenUpdatePsw}>
+            {t('account_info:change')}
+          </Button>
+        </Flex>
         {feConfigs?.isPlus && (
           <Flex mt={4} alignItems={'center'}>
             <Box {...labelStyles}>{t('common:contact_way')}&nbsp;</Box>
@@ -232,14 +230,12 @@ const MyInfo = ({ onOpenContact }: { onOpenContact: () => void }) => {
           </Flex>
         )}
 
-        {feConfigs.isPlus && (
-          <Flex mt={6} alignItems={'center'}>
-            <Box {...labelStyles}>{t('account_info:user_team_team_name')}&nbsp;</Box>
-            <Flex flex={'1 0 0'} w={0} align={'center'}>
-              <TeamSelector height={'28px'} w={'100%'} showManage />
-            </Flex>
+        <Flex mt={6} alignItems={'center'}>
+          <Box {...labelStyles}>{t('account_info:user_team_team_name')}&nbsp;</Box>
+          <Flex flex={'1 0 0'} w={0} align={'center'}>
+            <TeamSelector height={'28px'} w={'100%'} showManage />
           </Flex>
-        )}
+        </Flex>
 
         {isPc ? (
           <Flex mt={4} alignItems={'center'} cursor={'pointer'}>

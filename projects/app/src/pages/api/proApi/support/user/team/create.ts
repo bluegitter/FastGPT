@@ -2,12 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { jsonRes } from '@fastgpt/service/common/response';
 import { authCert } from '@fastgpt/service/support/permission/auth/common';
 import { MongoTeam } from '@fastgpt/service/support/user/team/teamSchema';
-import { MongoTeamMember } from '@fastgpt/service/support/user/team/teamMemberSchema';
 import { MongoMemberGroupModel } from '@fastgpt/service/support/permission/memberGroup/memberGroupSchema';
-import {
-  TeamMemberRoleEnum,
-  TeamMemberStatusEnum
-} from '@fastgpt/global/support/user/team/constant';
 import { DefaultGroupName } from '@fastgpt/global/support/user/team/group/constant';
 import { createRootOrg } from '@fastgpt/service/support/permission/org/controllers';
 import { mongoSessionRun } from '@fastgpt/service/common/mongo/sessionRun';
@@ -19,13 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { userId } = await authCert({ req, authToken: true });
 
     if (req.method === 'POST') {
-      const {
-        name,
-        avatar = '/icon/logo.svg',
-        memberName,
-        memberAvatar,
-        notificationAccount
-      } = req.body as CreateTeamProps;
+      const { name, avatar = '/icon/logo.svg', notificationAccount } = req.body as CreateTeamProps;
 
       if (!name || !name.trim()) {
         return jsonRes(res, {
@@ -65,22 +54,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           { session }
         );
 
-        // 创建团队成员（创建者为团队所有者）
-        const [teamMember] = await MongoTeamMember.create(
-          [
-            {
-              teamId: team._id,
-              userId: userId,
-              name: memberName || 'Owner',
-              role: TeamMemberRoleEnum.owner,
-              status: TeamMemberStatusEnum.active,
-              avatar: memberAvatar || '/icon/human.svg',
-              createTime: new Date()
-            }
-          ],
-          { session }
-        );
-
         // 创建默认成员组
         await MongoMemberGroupModel.create(
           [
@@ -98,8 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         return {
           teamId: team._id,
-          teamName: team.name,
-          tmbId: teamMember._id
+          teamName: team.name
         };
       });
 

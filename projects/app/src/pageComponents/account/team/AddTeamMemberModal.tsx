@@ -7,7 +7,8 @@ import {
   ModalFooter,
   HStack,
   FormLabel,
-  Flex
+  Flex,
+  Checkbox
 } from '@chakra-ui/react';
 import MyModal from '@fastgpt/web/components/common/MyModal';
 import MySelect from '@fastgpt/web/components/common/MySelect';
@@ -15,6 +16,7 @@ import { useToast } from '@fastgpt/web/hooks/useToast';
 import { addTeamMember, getTeamList } from '@/web/support/user/team/api';
 import { useTranslation } from 'next-i18next';
 import type { TeamTmbItemType } from '@fastgpt/global/support/user/team/type.d';
+import { useUserStore } from '@/web/support/user/useUserStore';
 
 const AddTeamMemberModal = ({
   isOpen,
@@ -33,6 +35,8 @@ const AddTeamMemberModal = ({
   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { userInfo } = useUserStore();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // 获取用户可用的团队列表
   const fetchTeams = async () => {
@@ -42,7 +46,8 @@ const AddTeamMemberModal = ({
       setTeams(data);
       // 如果有团队，默认选择第一个
       if (data.length > 0) {
-        setSelectedTeamId(data[0].teamId);
+        const teamId = userInfo?.team?.teamId;
+        setSelectedTeamId(teamId || data[0].teamId);
       }
     } catch (error) {
       console.error('获取团队列表失败:', error);
@@ -51,9 +56,10 @@ const AddTeamMemberModal = ({
     setIsLoadingTeams(false);
   };
 
-  // 当弹窗打开时获取团队列表
+  // 当弹窗打开时重置isAdmin
   useEffect(() => {
     if (isOpen) {
+      setIsAdmin(false);
       fetchTeams();
     }
   }, [isOpen]);
@@ -84,12 +90,14 @@ const AddTeamMemberModal = ({
       await addTeamMember({
         username: username.trim(),
         password: password.trim(),
-        teamId: selectedTeamId
+        teamId: selectedTeamId,
+        isAdmin
       });
       toast({ status: 'success', title: '添加成功' });
       setUsername('');
       setPassword('');
       setSelectedTeamId('');
+      setIsAdmin(false);
       onClose();
       onSuccess();
     } catch (e: any) {
@@ -148,6 +156,14 @@ const AddTeamMemberModal = ({
                 isLoading={isLoadingTeams}
               />
             </Box>
+          </Flex>
+          <Flex align="center">
+            <FormLabel minW="70px" m={0}>
+              设置为团队管理员
+            </FormLabel>
+            <Checkbox isChecked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)}>
+              设为管理员
+            </Checkbox>
           </Flex>
         </Flex>
       </ModalBody>

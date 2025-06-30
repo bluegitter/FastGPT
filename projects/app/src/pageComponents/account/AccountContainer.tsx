@@ -49,7 +49,7 @@ const AccountContainer = ({
       label: t('account:personal_information'),
       value: TabEnum.info
     },
-    ...(feConfigs?.isPlus
+    ...(userInfo?.team?.permission.isOwner
       ? [
           {
             icon: 'support/user/usersLight',
