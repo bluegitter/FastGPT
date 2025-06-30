@@ -67,7 +67,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     jsonRes(res, {
       data: {
         appId,
-        oldOwner: app.owner,
         newOwner: ownerId,
         updateTime: new Date()
       },

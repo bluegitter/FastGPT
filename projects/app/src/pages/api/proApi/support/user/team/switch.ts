@@ -104,7 +104,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     setCookie(res, token);
 
     jsonRes(res, {
-      data: { teamId },
+      data: {
+        teamId: userDetail.team.teamId,
+        tmbId: userDetail.team.tmbId
+      },
       message: '团队切换成功'
     });
   } catch (error) {

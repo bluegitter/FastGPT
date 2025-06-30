@@ -63,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const validMembers = memberDetails.filter(Boolean);
 
           // 查找组所有者（role为owner的成员）
-          const owner = validMembers.find((member) => member.role === 'owner');
+          const owner = validMembers.find((member) => member && member.role === 'owner');
 
           return {
             _id: group._id,

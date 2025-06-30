@@ -69,8 +69,10 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
   const { feConfigs } = useSystemStore();
   const isSyncMember = feConfigs?.register_method?.includes('sync');
 
-  const { myTeams, onSwitchTeam } = useContextSelector(TeamContext, (v) => v);
-
+  const { myTeams, onSwitchTeam } = useContextSelector(TeamContext, (v) => ({
+    myTeams: v.myTeams,
+    onSwitchTeam: v.onSwitchTeam
+  }));
   // Member status selector
   const statusOptions = [
     {
@@ -113,7 +115,8 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
       status,
       withPermission: true,
       withOrgs: true,
-      searchKey
+      searchKey,
+      teamId: userInfo?.team?.teamId
     },
     refreshDeps: [searchKey, status, userInfo?.team?.teamId],
     throttleWait: 500,
@@ -322,7 +325,6 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                     </Td>
                     <Td>
                       {userInfo?.team.permission.hasManagePer &&
-                        member.role !== TeamMemberRoleEnum.owner &&
                         member.tmbId !== userInfo?.team.tmbId &&
                         (member.status === TeamMemberStatusEnum.active ? (
                           <>

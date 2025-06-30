@@ -17,6 +17,7 @@ import { addTeamMember, getTeamList } from '@/web/support/user/team/api';
 import { useTranslation } from 'next-i18next';
 import type { TeamTmbItemType } from '@fastgpt/global/support/user/team/type.d';
 import { useUserStore } from '@/web/support/user/useUserStore';
+import { TeamMemberRoleEnum } from '@fastgpt/global/support/user/team/constant';
 
 const AddTeamMemberModal = ({
   isOpen,
@@ -91,7 +92,7 @@ const AddTeamMemberModal = ({
         username: username.trim(),
         password: password.trim(),
         teamId: selectedTeamId,
-        isAdmin
+        role: isAdmin ? TeamMemberRoleEnum.owner : TeamMemberRoleEnum.member
       });
       toast({ status: 'success', title: '添加成功' });
       setUsername('');

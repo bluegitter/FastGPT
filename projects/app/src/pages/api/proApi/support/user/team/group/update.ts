@@ -133,10 +133,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           // 添加新的成员
           if (memberList.length > 0) {
-            const groupMembers = memberList.map((member) => ({
+            const groupMembers = memberList.map((tmbId: string) => ({
               groupId: new Types.ObjectId(groupId),
-              tmbId: new Types.ObjectId(member.tmbId),
-              role: member.role
+              tmbId: new Types.ObjectId(tmbId),
+              role: GroupMemberRole.member
             }));
 
             await MongoGroupMemberModel.insertMany(groupMembers, { session });
@@ -146,6 +146,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // 获取更新后的成员组信息
       const updatedGroup = await MongoMemberGroupModel.findById(groupId).lean();
+
+      if (!updatedGroup) {
+        return jsonRes(res, {
+          code: 404,
+          error: '成员组更新后不存在，可能已被删除'
+        });
+      }
 
       jsonRes(res, {
         data: {

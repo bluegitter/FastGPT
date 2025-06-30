@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: {
         list: (usage?.list || []).map((item) => ({
           ...item,
-          sourceMember: item.sourceMember || { avatar: '/icon/human.svg', name: '-' }
+          sourceMember: (item as any).sourceMember || { avatar: '/icon/human.svg', name: '-' }
         })),
         total: usage?.list?.length || 0,
         teamId,

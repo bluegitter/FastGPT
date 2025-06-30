@@ -12,7 +12,7 @@ import { MongoMcpKey } from '@fastgpt/service/support/mcp/schema';
 import { MongoChatItem } from '@fastgpt/service/core/chat/chatItemSchema';
 import { MongoChat } from '@fastgpt/service/core/chat/chatSchema';
 import { MongoUsage } from '@fastgpt/service/support/wallet/usage/schema';
-import { MongoOperationLog } from '@fastgpt/service/support/user/audit/schema';
+import { MongoOperationLog } from '@fastgpt/service/support/operationLog/schema';
 import { MongoResourcePermission } from '@fastgpt/service/support/permission/schema';
 import { MongoGroupMemberModel } from '@fastgpt/service/support/permission/memberGroup/groupMemberSchema';
 import { MongoOrgMemberModel } from '@fastgpt/service/support/permission/org/orgMemberSchema';
