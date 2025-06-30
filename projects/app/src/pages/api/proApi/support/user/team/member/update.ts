@@ -46,6 +46,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ownerId: memberToUpdate.userId
         });
         await MongoTeamMember.findByIdAndUpdate(tmbId, { role: TeamMemberRoleEnum.owner });
+      } else {
+        // 如果当前是owner，且isAdmin为false，则降级为member
+        if (memberToUpdate.role === TeamMemberRoleEnum.owner) {
+          await MongoTeamMember.findByIdAndUpdate(tmbId, { role: TeamMemberRoleEnum.member });
+        }
       }
 
       // 更新用户信息
