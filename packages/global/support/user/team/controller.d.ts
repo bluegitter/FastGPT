@@ -10,8 +10,6 @@ export type AuthTeamRoleProps = {
 export type CreateTeamProps = {
   name: string;
   avatar?: string;
-  memberName?: string;
-  memberAvatar?: string;
   notificationAccount?: string;
 };
 export type UpdateTeamProps = Omit<ThirdPartyAccountType, 'externalWorkflowVariable'> & {

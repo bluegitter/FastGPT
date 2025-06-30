@@ -12,7 +12,10 @@ import {
   Thead,
   Tr,
   useDisclosure,
-  VStack
+  VStack,
+  ModalBody,
+  ModalFooter,
+  Input
 } from '@chakra-ui/react';
 import { useTranslation } from 'next-i18next';
 import { useUserStore } from '@/web/support/user/useUserStore';
@@ -50,6 +53,11 @@ import { PaginationResponse } from '@fastgpt/web/common/fetch/type';
 import _ from 'lodash';
 import MySelect from '@fastgpt/web/components/common/MySelect';
 import { useEditTitle } from '@/web/common/hooks/useEditTitle';
+import PopoverConfirm from '@fastgpt/web/components/common/MyPopover/PopoverConfirm';
+import MyIconButton from '@fastgpt/web/components/common/Icon/button';
+import MyModal from '@fastgpt/web/components/common/MyModal';
+import AddTeamMemberModal from './AddTeamMemberModal';
+import EditUserModal from './EditUserModal';
 
 const InviteModal = dynamic(() => import('./Invite/InviteModal'));
 const TeamTagModal = dynamic(() => import('@/components/support/user/team/TeamTagModal'));
@@ -79,6 +87,9 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
     }
   ];
   const [status, setStatus] = useState<string>();
+  const [addUserModalOpen, setAddUserModalOpen] = useState(false);
+  const [editUserModalOpen, setEditUserModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const {
     isOpen: isOpenTeamTagsAsync,
@@ -104,7 +115,7 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
       withOrgs: true,
       searchKey
     },
-    refreshDeps: [searchKey, status],
+    refreshDeps: [searchKey, status, userInfo?.team?.teamId],
     throttleWait: 500,
     debounceWait: 200
   });
@@ -153,26 +164,9 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
 
   const isLoading = loadingMembers || isSyncing;
 
-  const { EditModal: EditMemberNameModal, onOpenModal: openEditMemberName } = useEditTitle({
-    title: t('account_team:edit_member'),
-    tip: t('account_team:edit_member_tip'),
-    canEmpty: false
-  });
-  const handleEditMemberName = (tmbId: string, memberName: string) => {
-    openEditMemberName({
-      defaultVal: memberName,
-      onSuccess: (newName: string) => {
-        return putUpdateMemberNameByManager(tmbId, newName).then(() => {
-          onRefreshMembers();
-        });
-      },
-      onError: (err) => {
-        toast({
-          title: '',
-          status: 'error'
-        });
-      }
-    });
+  const handleEditUser = (member: any) => {
+    setSelectedUser(member);
+    setEditUserModalOpen(true);
   };
 
   return (
@@ -219,11 +213,11 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
           )}
           {userInfo?.team.permission.hasManagePer && !isSyncMember && (
             <Button
-              variant={'primary'}
+              variant={'whitePrimary'}
               size="md"
               borderRadius={'md'}
               ml={3}
-              leftIcon={<MyIcon name="common/inviteLight" w={'16px'} color={'white'} />}
+              leftIcon={<MyIcon name="common/inviteLight" w={'16px'} color={'blue'} />}
               onClick={onOpenInvite}
             >
               {t('account_team:user_team_invite_member')}
@@ -258,6 +252,13 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
               {t('account_team:user_team_leave_team')}
             </Button>
           )}
+          <Button
+            colorScheme="blue"
+            leftIcon={<MyIcon name="common/addUser" w={'16px'} color={'white'} />}
+            onClick={() => setAddUserModalOpen(true)}
+          >
+            新增用户
+          </Button>
         </HStack>
       </Flex>
 
@@ -270,7 +271,7 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                   <Th borderLeftRadius="6px" bgColor="myGray.100">
                     {t('account_team:user_name')}
                   </Th>
-                  <Th bgColor="myGray.100">{t('common:contact_way')}</Th>
+                  <Th bgColor="myGray.100">团队名称</Th>
                   <Th bgColor="myGray.100" pl={9}>
                     {t('account_team:org')}
                   </Th>
@@ -288,6 +289,11 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                         <Avatar src={member.avatar} w={['18px', '22px']} borderRadius={'50%'} />
                         <Box className={'textEllipsis'}>
                           {member.memberName}
+                          {member.role === TeamMemberRoleEnum.owner && (
+                            <Tag ml="2" colorSchema="blue" bg={'blue.50'} color={'blue.600'}>
+                              {t('account_team:permission_manage')}
+                            </Tag>
+                          )}
                           {member.status !== 'active' && (
                             <Tag ml="2" colorSchema="gray" bg={'myGray.100'} color={'myGray.700'}>
                               {t('account_team:leave')}
@@ -296,7 +302,9 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                         </Box>
                       </HStack>
                     </Td>
-                    <Td maxW={'300px'}>{member.contact || '-'}</Td>
+                    <Td maxW={'200px'}>
+                      <Box className={'textEllipsis'}>{member.teamName || '-'}</Box>
+                    </Td>
                     <Td maxWidth="300px">
                       {(() => {
                         return <OrgTags orgs={member.orgs || undefined} type="tag" />;
@@ -329,7 +337,7 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                                 color: 'blue.600',
                                 bgColor: 'myGray.100'
                               }}
-                              onClick={() => handleEditMemberName(member.tmbId, member.memberName)}
+                              onClick={() => handleEditUser(member)}
                             />
                             <Icon
                               name={'common/trash'}
@@ -383,7 +391,6 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
             </Table>
             <ConfirmRemoveMemberModal />
             <ConfirmRestoreMemberModal />
-            <EditMemberNameModal />
           </TableContainer>
         </MemberScrollData>
       </MyBox>
@@ -391,6 +398,22 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
       <ConfirmLeaveTeamModal />
       {isOpenInvite && userInfo?.team?.teamId && <InviteModal onClose={onCloseInvite} />}
       {isOpenTeamTagsAsync && <TeamTagModal onClose={onCloseTeamTagsAsync} />}
+
+      <AddTeamMemberModal
+        isOpen={addUserModalOpen}
+        onClose={() => setAddUserModalOpen(false)}
+        onSuccess={refetchMemberList}
+      />
+
+      <EditUserModal
+        isOpen={editUserModalOpen}
+        onClose={() => {
+          setEditUserModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onSuccess={refetchMemberList}
+        userInfo={selectedUser}
+      />
     </>
   );
 }

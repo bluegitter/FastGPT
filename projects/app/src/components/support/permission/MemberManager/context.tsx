@@ -109,18 +109,15 @@ const CollaboratorContextProvider = ({
     loading: isFetchingCollaborator
   } = useRequest2(
     async () => {
-      if (feConfigs.isPlus) {
-        const data = await onGetCollaboratorList();
-        return data.map((item) => {
-          return {
-            ...item,
-            permission: new Permission({
-              per: item.permission.value
-            })
-          };
-        });
-      }
-      return [];
+      const data = await onGetCollaboratorList();
+      return data.map((item) => {
+        return {
+          ...item,
+          permission: new Permission({
+            per: item.permission.value
+          })
+        };
+      });
     },
     {
       manual: false,
