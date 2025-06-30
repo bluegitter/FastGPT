@@ -78,8 +78,10 @@ export type TeamMemberItemType<
   } = { withPermission: true; withOrgs: true; withGroupRole: false }
 > = {
   userId: string;
+  username?: string;
   tmbId: string;
   teamId: string;
+  teamName?: string;
   memberName: string;
   avatar: string;
   role: `${TeamMemberRoleEnum}`;
