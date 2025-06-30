@@ -182,19 +182,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // 使用事务更新协作者权限
       await mongoSessionRun(async (session) => {
-        // 删除当前团队的所有协作者权限
-        await MongoResourcePermission.deleteMany(
-          {
-            resourceType: PerResourceTypeEnum.team,
-            teamId: new Types.ObjectId(teamId)
-          },
-          { session }
-        );
+        // 只更新/插入本次涉及的成员、组织、成员组权限，不删除其他
 
-        // 创建新的协作者权限记录
-        const permissionRecords = [];
-
-        // 添加成员权限
+        // 更新成员权限
         if (validMembers.length > 0) {
           for (const memberId of validMembers) {
             // 查找对应的权限值
@@ -205,64 +195,72 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 memberPermission = memberData.permission;
               }
             }
-
-            permissionRecords.push({
-              teamId: new Types.ObjectId(teamId),
-              tmbId: new Types.ObjectId(memberId),
-              resourceType: PerResourceTypeEnum.team,
-              permission: memberPermission,
-              resourceId: null
-            });
+            await MongoResourcePermission.updateOne(
+              {
+                teamId: new Types.ObjectId(teamId),
+                tmbId: new Types.ObjectId(memberId),
+                resourceType: PerResourceTypeEnum.team
+              },
+              {
+                $set: {
+                  permission: memberPermission
+                }
+              },
+              { upsert: true, session }
+            );
           }
         }
 
-        // 添加组织权限
+        // 更新组织权限
         if (validOrgs.length > 0) {
           for (const orgId of validOrgs) {
-            // 查找对应的权限值
-            let orgPermission = permission || 4; // 默认读取权限
+            let orgPermission = permission || 4;
             if (orgs && Array.isArray(orgs) && typeof orgs[0] === 'object') {
               const orgData = orgs.find((o: any) => o.orgId === orgId);
               if (orgData && orgData.permission !== undefined) {
                 orgPermission = orgData.permission;
               }
             }
-
-            permissionRecords.push({
-              teamId: new Types.ObjectId(teamId),
-              orgId: new Types.ObjectId(orgId),
-              resourceType: PerResourceTypeEnum.team,
-              permission: orgPermission,
-              resourceId: null
-            });
+            await MongoResourcePermission.updateOne(
+              {
+                teamId: new Types.ObjectId(teamId),
+                orgId: new Types.ObjectId(orgId),
+                resourceType: PerResourceTypeEnum.team
+              },
+              {
+                $set: {
+                  permission: orgPermission
+                }
+              },
+              { upsert: true, session }
+            );
           }
         }
 
-        // 添加成员组权限
+        // 更新成员组权限
         if (validGroups.length > 0) {
           for (const groupId of validGroups) {
-            // 查找对应的权限值
-            let groupPermission = permission || 4; // 默认读取权限
+            let groupPermission = permission || 4;
             if (groups && Array.isArray(groups) && typeof groups[0] === 'object') {
               const groupData = groups.find((g: any) => g.groupId === groupId);
               if (groupData && groupData.permission !== undefined) {
                 groupPermission = groupData.permission;
               }
             }
-
-            permissionRecords.push({
-              teamId: new Types.ObjectId(teamId),
-              groupId: new Types.ObjectId(groupId),
-              resourceType: PerResourceTypeEnum.team,
-              permission: groupPermission,
-              resourceId: null
-            });
+            await MongoResourcePermission.updateOne(
+              {
+                teamId: new Types.ObjectId(teamId),
+                groupId: new Types.ObjectId(groupId),
+                resourceType: PerResourceTypeEnum.team
+              },
+              {
+                $set: {
+                  permission: groupPermission
+                }
+              },
+              { upsert: true, session }
+            );
           }
-        }
-
-        // 批量插入权限记录
-        if (permissionRecords.length > 0) {
-          await MongoResourcePermission.insertMany(permissionRecords, { session });
         }
       });
 
