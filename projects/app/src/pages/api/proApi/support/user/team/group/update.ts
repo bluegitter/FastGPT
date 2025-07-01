@@ -104,16 +104,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
         }
 
+        // 如果没有owner，将第一个admin设置为owner
         if (owners.length === 0) {
-          return jsonRes(res, {
-            code: 400,
-            error: '成员组必须有一个所有者'
-          });
+          const admins = memberList.filter((m) => m.role === GroupMemberRole.admin);
+          if (admins.length === 0) {
+            return jsonRes(res, {
+              code: 400,
+              error: '成员组必须有一个所有者或管理员'
+            });
+          }
+
+          // 将第一个admin设置为owner
+          console.log('[成员组更新] 没有owner，将第一个admin设置为owner:', admins[0].tmbId);
+          admins[0].role = GroupMemberRole.owner;
         }
       }
 
       // 使用事务更新成员组
-      await mongoSessionRun(async (session) => {
+      const updateResult = await mongoSessionRun(async (session) => {
         // 更新成员组基本信息
         const updateData: any = {};
         if (name !== undefined) updateData.name = name;
@@ -125,23 +133,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // 更新成员列表（如果提供）
         if (memberList !== undefined) {
+          // 在事务内部获取当前群组的成员数量，确保数据一致性
+          const currentMemberCount = await MongoGroupMemberModel.countDocuments(
+            {
+              groupId: new Types.ObjectId(groupId)
+            },
+            { session }
+          );
+
+          console.log('[成员组更新] 当前群组成员数量:', currentMemberCount);
+          console.log('[成员组更新] 新成员列表数量:', memberList.length);
+
           // 删除当前组的所有成员
-          await MongoGroupMemberModel.deleteMany(
+          const deleteResult = await MongoGroupMemberModel.deleteMany(
             { groupId: new Types.ObjectId(groupId) },
             { session }
           );
 
+          console.log('[成员组更新] 删除的成员数量:', deleteResult.deletedCount);
+
           // 添加新的成员
+          let insertResult: any = [];
           if (memberList.length > 0) {
-            const groupMembers = memberList.map((tmbId: string) => ({
+            const groupMembers = memberList.map((member: any) => ({
               groupId: new Types.ObjectId(groupId),
-              tmbId: new Types.ObjectId(tmbId),
-              role: GroupMemberRole.member
+              tmbId: new Types.ObjectId(member.tmbId),
+              role: member.role
             }));
 
-            await MongoGroupMemberModel.insertMany(groupMembers, { session });
+            insertResult = await MongoGroupMemberModel.insertMany(groupMembers, { session });
+            console.log('[成员组更新] 插入的成员数量:', insertResult.length);
           }
+
+          // 返回更新信息
+          return {
+            previousMemberCount: currentMemberCount,
+            newMemberCount: memberList.length,
+            deletedCount: deleteResult.deletedCount,
+            addedCount: insertResult.length
+          };
         }
+
+        return undefined;
       });
 
       // 获取更新后的成员组信息
@@ -160,7 +193,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           name: updatedGroup.name,
           avatar: updatedGroup.avatar,
           updateTime: updatedGroup.updateTime,
-          memberCount: memberList ? memberList.length : undefined
+          memberCount: memberList ? memberList.length : undefined,
+          updateInfo: updateResult
         },
         message: '成员组更新成功'
       });

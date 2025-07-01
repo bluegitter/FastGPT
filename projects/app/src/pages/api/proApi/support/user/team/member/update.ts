@@ -40,15 +40,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
-      // 如果设置为管理员，则转让团队所有者，并将该成员role设为owner
+      // 如果设置为管理员，则转让团队所有者，并将该成员role设为admim
       if (isAdmin) {
         await MongoTeam.findByIdAndUpdate(memberToUpdate.teamId, {
           ownerId: memberToUpdate.userId
         });
-        await MongoTeamMember.findByIdAndUpdate(tmbId, { role: TeamMemberRoleEnum.owner });
+        await MongoTeamMember.findByIdAndUpdate(tmbId, { role: TeamMemberRoleEnum.admin });
       } else {
         // 如果当前是owner，且isAdmin为false，则降级为member
-        if (memberToUpdate.role === TeamMemberRoleEnum.owner) {
+        if (memberToUpdate.role === TeamMemberRoleEnum.admin) {
           await MongoTeamMember.findByIdAndUpdate(tmbId, { role: TeamMemberRoleEnum.member });
         }
       }
